@@ -1,0 +1,37 @@
+{
+	"schemaVersion": 1,
+	"id": "billiardsmod",
+	"version": "${version}",
+	"name": "Billiards Mod",
+	"description": "Tutorial Mod by Tiago",
+	"authors": [
+		"Tiago Abraão"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/tiagoabra5/Billiards-Mod-Fabric-1.21"
+	},
+	"license": "MIT",
+	"icon": "assets/billiardsmod/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.tiago.billiardsmod.BilliardsMod"
+		],
+		"fabric-datagen": [
+			"com.tiago.billiardsmod.BilliardsModDataGenerator"
+		],
+        "client": [
+            "com.tiago.billiardsmod.BilliardsModClient"
+        ]
+	},
+	"mixins": [
+		"billiardsmod.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
