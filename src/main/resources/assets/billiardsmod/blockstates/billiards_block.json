@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "billiardsmod:block/billiards_block"
+    }
+  }
+}

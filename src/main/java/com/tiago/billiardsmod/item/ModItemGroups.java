@@ -21,6 +21,7 @@ public class ModItemGroups {
                     .entries((displayContext, entries) -> {
                         entries.add(ModItems.POOL_CUE);
                         entries.add(ModBlocks.BILLIARDS_TABLE_BLOCK);
+                        entries.add(ModBlocks.BILLIARDS_BLOCK);
                     }).build());
 
     public static void registerItemGroups(){

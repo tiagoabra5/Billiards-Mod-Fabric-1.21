@@ -2,6 +2,7 @@
   "item.billiardsmod.pool_cue": "Pool Cue",
 
   "block.billiardsmod.billiards_table_block": "Billiards Table",
+  "block.billiardsmod.billiards_block": "Billiards Table 2",
 
   "itemgroup.billiardsmod.billiards_items": "Billiards Items"
 }

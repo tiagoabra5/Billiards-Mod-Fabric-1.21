@@ -1,6 +1,7 @@
 package com.tiago.billiardsmod.block;
 
 import com.tiago.billiardsmod.BilliardsMod;
+import com.tiago.billiardsmod.block.custom.BilliardsBlock;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -16,6 +17,9 @@ public class ModBlocks {
 
     public static final Block BILLIARDS_TABLE_BLOCK = registerBlock("billiards_table_block",
             new Block(AbstractBlock.Settings.create().strength(3).sounds(BlockSoundGroup.WOOD)));
+
+    public static final Block BILLIARDS_BLOCK = registerBlock("billiards_block",
+            new BilliardsBlock(AbstractBlock.Settings.create().nonOpaque()));
 
     public static Block registerBlock(String name, Block block){
         registerBlockItem(name, block);
