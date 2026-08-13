@@ -13,6 +13,8 @@ public class ModItems {
 
     public static final Item POOL_CUE = registerItem("pool_cue", new Item(new Item.Settings()));
 
+    public static final Item EIGHT_BALL = registerItem("eight_ball", new Item(new Item.Settings()));
+
     private static Item registerItem(String name, Item item){
         return Registry.register(Registries.ITEM, Identifier.of(BilliardsMod.MOD_ID, name), item);
     }
@@ -22,6 +24,7 @@ public class ModItems {
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.TOOLS).register(fabricItemGroupEntries -> {
             fabricItemGroupEntries.add(POOL_CUE);
+            fabricItemGroupEntries.add(EIGHT_BALL);
         });
     }
 }

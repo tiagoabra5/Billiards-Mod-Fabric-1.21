@@ -16,7 +16,7 @@ public class ModItemGroups {
     public static final ItemGroup BILLIARDS_ITEMS_GROUP = Registry.register(Registries.ITEM_GROUP,
             Identifier.of(BilliardsMod.MOD_ID, "billiards_items"),
             FabricItemGroup.builder()
-                    .icon(() -> new ItemStack(ModItems.POOL_CUE))
+                    .icon(() -> new ItemStack(ModItems.EIGHT_BALL))
                     .displayName(Text.translatable("itemgroup.billiardsmod.billiards_items"))
                     .entries((displayContext, entries) -> {
                         entries.add(ModItems.POOL_CUE);
