@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "texture": {
+    "all": "billiardsmod:block/billiards_table_block"
+  }
+}

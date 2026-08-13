@@ -1,5 +1,6 @@
 package com.tiago.billiardsmod;
 
+import com.tiago.billiardsmod.block.ModBlocks;
 import com.tiago.billiardsmod.item.ModItems;
 import net.fabricmc.api.ModInitializer;
 
@@ -15,6 +16,7 @@ public class BilliardsMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
         ModItems.registerModItems();
+        ModBlocks.registerBlocks();
 	}
 
 	public static Identifier id(String path) {
