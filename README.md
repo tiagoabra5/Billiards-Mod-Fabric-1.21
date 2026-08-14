@@ -1,5 +1,6 @@
 <div align="center">
-
+<img src="background_readme.png" alt="Logo" width="1000"/> 
+  
 # Billiards Mod
 
 **A Minecraft mod that brings billiards to your world.**
