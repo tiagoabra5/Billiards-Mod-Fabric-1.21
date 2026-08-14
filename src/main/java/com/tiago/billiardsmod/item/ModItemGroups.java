@@ -20,7 +20,6 @@ public class ModItemGroups {
                     .displayName(Text.translatable("itemgroup.billiardsmod.billiards_items"))
                     .entries((displayContext, entries) -> {
                         entries.add(ModItems.POOL_CUE);
-                        entries.add(ModBlocks.BILLIARDS_TABLE_BLOCK);
                         entries.add(ModBlocks.BILLIARDS_BLOCK);
                     }).build());
 

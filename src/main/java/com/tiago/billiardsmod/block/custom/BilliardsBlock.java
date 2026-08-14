@@ -17,8 +17,6 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.text.html.BlockView;
-
 public class BilliardsBlock extends BlockWithEntity implements BlockEntityProvider {
 
     private static final VoxelShape SHAPE =
@@ -82,6 +80,8 @@ public class BilliardsBlock extends BlockWithEntity implements BlockEntityProvid
 
                 billiardsBlockEntity.markDirty();
                 world.updateListeners(pos, state, state, 0);
+            } else if(player.isSneaking() && !world.isClient()){
+                player.openHandledScreen(billiardsBlockEntity);
             }
         }
 

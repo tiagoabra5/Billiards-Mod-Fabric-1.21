@@ -4,6 +4,7 @@ import com.tiago.billiardsmod.block.ModBlocks;
 import com.tiago.billiardsmod.block.entity.ModBlockEntities;
 import com.tiago.billiardsmod.item.ModItemGroups;
 import com.tiago.billiardsmod.item.ModItems;
+import com.tiago.billiardsmod.screen.ModScreenHandlers;
 import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.util.Identifier;
@@ -23,6 +24,7 @@ public class BilliardsMod implements ModInitializer {
         ModBlocks.registerBlocks();
 
         ModBlockEntities.registerBlockEntities();
+        ModScreenHandlers.registerScreenHandlers();
 	}
 
 	public static Identifier id(String path) {
