@@ -30,4 +30,9 @@ public class BilliardsScreen extends HandledScreen<BilliardsScreenHandler> {
         context.drawTexture(GUI_TEXTURE, x, y, 0, 0, backgroundWidth, backgroundHeight);
 
     }
+
+    @Override
+    protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
+        context.drawText(textRenderer, title, titleX, titleY, 0x404040, false);
+    }
 }
