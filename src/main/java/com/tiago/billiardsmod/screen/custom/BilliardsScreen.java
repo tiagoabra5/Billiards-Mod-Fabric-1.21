@@ -2,12 +2,16 @@ package com.tiago.billiardsmod.screen.custom;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.tiago.billiardsmod.BilliardsMod;
+import com.tiago.billiardsmod.billiards.Ball;
+import com.tiago.billiardsmod.billiards.BallRack;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+
+import java.util.List;
 
 public class BilliardsScreen extends HandledScreen<BilliardsScreenHandler> {
 
@@ -30,6 +34,11 @@ public class BilliardsScreen extends HandledScreen<BilliardsScreenHandler> {
     private static final int COLOR_FELT = 0xFF1B6B3A;
     private static final int COLOR_POCKET = 0xFF000000;
     private static final int COLOR_FORCE_LINE = 0xFFAAAAAA;
+
+    private static final float BALL_RADIUS = 4f;
+    private static final int RACK_ROWS = 5;
+
+    private List<Ball> balls;
 
     private int getTableLeft() {
         return (width - backgroundWidth) / 2 + TABLE_LEFT_MARGIN;
@@ -63,14 +72,14 @@ public class BilliardsScreen extends HandledScreen<BilliardsScreenHandler> {
 
     private void drawPockets(DrawContext context, int left, int top, int right, int bottom) {
         int half = POCKET_SIZE / 2;
-        int midX = (left + right) / 2;
+        int midY = (top + bottom) / 2;
 
         int[][] pocketPositions = {
                 {left, top},
-                {midX, top},
-                {right, top},
+                {left, midY},
                 {left, bottom},
-                {midX, bottom},
+                {right, top},
+                {right, midY},
                 {right, bottom}
         };
 
@@ -99,6 +108,24 @@ public class BilliardsScreen extends HandledScreen<BilliardsScreenHandler> {
     }
 
     @Override
+    protected void init() {
+        super.init();
+        if (balls == null) {
+            float spacing = BALL_RADIUS * 2f + 0.5f;
+            float triangleHeight = (RACK_ROWS - 1) * spacing * 0.87f;
+            float footSpotY = getTableTop() + BALL_RADIUS + 4 + triangleHeight;
+            float headSpotY = getTableBottom() - 20;
+
+            balls = BallRack.createStandardRack(
+                    (getTableLeft() + getTableRight()) / 2f,
+                    footSpotY,
+                    headSpotY,
+                    BALL_RADIUS
+            );
+        }
+    }
+
+    @Override
     protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
         RenderSystem.setShader(GameRenderer::getPositionTexProgram);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
@@ -111,6 +138,7 @@ public class BilliardsScreen extends HandledScreen<BilliardsScreenHandler> {
 
         drawTable(context);
         drawForceLinePlaceholder(context);
+        BallRenderer.drawBalls(context, balls);
     }
 
     @Override
