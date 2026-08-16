@@ -4,6 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.tiago.billiardsmod.BilliardsMod;
 import com.tiago.billiardsmod.billiards.Ball;
 import com.tiago.billiardsmod.billiards.BallRack;
+import com.tiago.billiardsmod.billiards.BilliardsPhysics;
+import com.tiago.billiardsmod.billiards.TableBounds;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.render.GameRenderer;
@@ -73,6 +75,27 @@ public class BilliardsScreen extends HandledScreen<BilliardsScreenHandler> {
         return getTableTop() + TABLE_HEIGHT;
     }
 
+    private TableBounds getTableBounds() {
+        return new TableBounds(getTableLeft(), getTableTop(), getTableRight(), getTableBottom());
+    }
+
+    private List<float[]> getPocketPositions() {
+        int left = getTableLeft();
+        int top = getTableTop();
+        int right = getTableRight();
+        int bottom = getTableBottom();
+        int midY = (top + bottom) / 2;
+
+        return List.of(
+                new float[]{left, top},
+                new float[]{left, midY},
+                new float[]{left, bottom},
+                new float[]{right, top},
+                new float[]{right, midY},
+                new float[]{right, bottom}
+        );
+    }
+
     private void drawTable(DrawContext context) {
         int left = getTableLeft();
         int top = getTableTop();
@@ -84,25 +107,14 @@ public class BilliardsScreen extends HandledScreen<BilliardsScreenHandler> {
 
         context.fill(left, top, right, bottom, COLOR_FELT);
 
-        drawPockets(context, left, top, right, bottom);
+        drawPockets(context);
     }
 
-    private void drawPockets(DrawContext context, int left, int top, int right, int bottom) {
+    private void drawPockets(DrawContext context) {
         int half = POCKET_SIZE / 2;
-        int midY = (top + bottom) / 2;
-
-        int[][] pocketPositions = {
-                {left, top},
-                {left, midY},
-                {left, bottom},
-                {right, top},
-                {right, midY},
-                {right, bottom}
-        };
-
-        for (int[] pos : pocketPositions) {
-            int x = pos[0];
-            int y = pos[1];
+        for (float[] pos : getPocketPositions()) {
+            int x = Math.round(pos[0]);
+            int y = Math.round(pos[1]);
             context.fill(x - half, y - half, x + half, y + half, COLOR_POCKET);
         }
     }
@@ -269,6 +281,7 @@ public class BilliardsScreen extends HandledScreen<BilliardsScreenHandler> {
 
     @Override
     protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
+        BilliardsPhysics.update(balls, getTableBounds(), getPocketPositions(), 9f);
         RenderSystem.setShader(GameRenderer::getPositionTexProgram);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         RenderSystem.setShaderTexture(0, GUI_TEXTURE);
