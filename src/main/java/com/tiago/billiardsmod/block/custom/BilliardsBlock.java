@@ -1,9 +1,12 @@
 package com.tiago.billiardsmod.block.custom;
 
 import com.mojang.serialization.MapCodec;
+import com.tiago.billiardsmod.block.entity.ModBlockEntities;
 import com.tiago.billiardsmod.block.entity.custom.BilliardsBlockEntity;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityTicker;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundCategory;
@@ -42,6 +45,12 @@ public class BilliardsBlock extends BlockWithEntity implements BlockEntityProvid
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
         return new BilliardsBlockEntity(pos, state);
+    }
+
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
+        return validateTicker(type, ModBlockEntities.BILLIARDS_BE, BilliardsBlockEntity::tick);
     }
 
     @Override
