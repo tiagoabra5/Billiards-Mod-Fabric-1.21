@@ -11,7 +11,7 @@ import net.minecraft.util.Identifier;
 
 public class ModItems {
 
-    public static final Item POOL_CUE = registerItem("pool_cue", new Item(new Item.Settings()));
+    public static final Item POOL_CUE = registerItem("pool_cue", new PoolCueItem(new Item.Settings().maxDamage(25)));
 
     public static final Item EIGHT_BALL = registerItem("eight_ball", new Item(new Item.Settings()));
 
