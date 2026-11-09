@@ -22,6 +22,8 @@
 
 Billiards Mod adds a fully playable billiards (pool) table to Minecraft. Set up a table, grab a cue, and challenge your friends to a game, right inside your world.
 
+Shared-table multiplayer and project architecture: [Portuguese guide](docs/MULTIPLAYER.md).
+
 ### Features
 
 - Placeable billiards table
@@ -75,6 +77,8 @@ For questions, suggestions, or feedback, please open an issue in this repository
 ### Sobre
 
 O Billiards Mod adiciona uma mesa de sinuca totalmente jogável ao Minecraft. Monte a mesa, pegue o taco e desafie seus amigos para uma partida, tudo dentro do seu mundo.
+
+Veja [como jogar em uma mesa compartilhada e a organização do projeto](docs/MULTIPLAYER.md).
 
 ### Funcionalidades
 
