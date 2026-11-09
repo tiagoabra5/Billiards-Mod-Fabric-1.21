@@ -28,6 +28,14 @@ public class Ball {
         return number == 0;
     }
 
+    public Ball copy() {
+        Ball copy = new Ball(number, x, y, radius);
+        copy.vx = vx;
+        copy.vy = vy;
+        copy.pocketed = pocketed;
+        return copy;
+    }
+
     public boolean isStripe() {
         return number >= 9 && number <= 15;
     }

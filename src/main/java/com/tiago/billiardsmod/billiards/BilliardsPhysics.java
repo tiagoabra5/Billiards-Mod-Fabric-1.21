@@ -4,14 +4,22 @@ import java.util.List;
 
 public class BilliardsPhysics {
 
+    // Minecraft ticks at 20 Hz; three small steps restore the original 60 Hz pace
+    // without increasing the distance traveled in an individual collision step.
+    private static final int STEPS_PER_TICK = 3;
     private static final float FRICTION = 0.985f;
-    private static final float MIN_SPEED = 0.02f;
+    private static final float MIN_SPEED = 0.05f;
 
-    public static void update(List<Ball> balls, TableBounds bounds, List<float[]> pockets, float captureRadius) {
-        moveBalls(balls);
-        resolveBallCollisions(balls);
-        checkPockets(balls, pockets, captureRadius);
-        resolveWallCollisions(balls, bounds);
+    /** Advances a server tick and reports whether the cue ball hit an object ball. */
+    public static boolean update(List<Ball> balls, TableBounds bounds, List<float[]> pockets, float captureRadius) {
+        boolean cueBallContact = false;
+        for (int step = 0; step < STEPS_PER_TICK; step++) {
+            moveBalls(balls);
+            cueBallContact |= resolveBallCollisions(balls);
+            checkPockets(balls, pockets, captureRadius);
+            resolveWallCollisions(balls, bounds);
+        }
+        return cueBallContact;
     }
 
     private static void moveBalls(List<Ball> balls) {
@@ -29,7 +37,8 @@ public class BilliardsPhysics {
         }
     }
 
-    private static void resolveBallCollisions(List<Ball> balls) {
+    private static boolean resolveBallCollisions(List<Ball> balls) {
+        boolean cueBallContact = false;
         for (int i = 0; i < balls.size(); i++) {
             Ball a = balls.get(i);
             if (a.pocketed) continue;
@@ -63,6 +72,8 @@ public class BilliardsPhysics {
 
                     if (speedAlongNormal > 0f) continue;
 
+                    if (a.isCueBall() != b.isCueBall()) cueBallContact = true;
+
                     a.vx += speedAlongNormal * nx;
                     a.vy += speedAlongNormal * ny;
                     b.vx -= speedAlongNormal * nx;
@@ -70,6 +81,7 @@ public class BilliardsPhysics {
                 }
             }
         }
+        return cueBallContact;
     }
 
     private static void resolveWallCollisions(List<Ball> balls, TableBounds bounds) {
@@ -115,6 +127,7 @@ public class BilliardsPhysics {
 
     public static boolean areBallsMoving(List<Ball> balls) {
         for (Ball ball : balls) {
+            if (ball.pocketed) continue;
             if (ball.vx != 0f || ball.vy != 0f) return true;
         }
         return false;

@@ -8,11 +8,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ItemActionResult;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -50,7 +46,7 @@ public class BilliardsBlock extends BlockWithEntity implements BlockEntityProvid
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        return validateTicker(type, ModBlockEntities.BILLIARDS_BE, BilliardsBlockEntity::tick);
+        return world.isClient ? null : validateTicker(type, ModBlockEntities.BILLIARDS_BE, BilliardsBlockEntity::tick);
     }
 
     @Override
@@ -71,29 +67,11 @@ public class BilliardsBlock extends BlockWithEntity implements BlockEntityProvid
     }
 
     @Override
-    protected ItemActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-
-        if(world.getBlockEntity(pos) instanceof BilliardsBlockEntity billiardsBlockEntity) {
-            if(billiardsBlockEntity.isEmpty() && !stack.isEmpty()) {
-                billiardsBlockEntity.setStack(0, stack.copyWithCount(1));
-                world.playSound(player, pos, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.BLOCKS, 1f, 2f);
-                stack.decrement(1);
-
-                billiardsBlockEntity.markDirty();
-                world.updateListeners(pos, state, state, 0);
-            } else if(stack.isEmpty() && !player.isSneaking()) {
-                ItemStack stackOnPedestal = billiardsBlockEntity.getStack(0);
-                player.setStackInHand(Hand.MAIN_HAND, stackOnPedestal);
-                world.playSound(player, pos, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.BLOCKS, 1f, 1f);
-                billiardsBlockEntity.clear();
-
-                billiardsBlockEntity.markDirty();
-                world.updateListeners(pos, state, state, 0);
-            } else if(player.isSneaking() && !world.isClient()){
-                player.openHandledScreen(billiardsBlockEntity);
-            }
+    protected ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
+        if (world.getBlockEntity(pos) instanceof BilliardsBlockEntity table) {
+            if (!world.isClient) player.openHandledScreen(table);
+            return ActionResult.SUCCESS;
         }
-
-        return ItemActionResult.SUCCESS;
+        return ActionResult.PASS;
     }
 }

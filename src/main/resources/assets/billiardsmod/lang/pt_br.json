@@ -1,0 +1,18 @@
+{
+  "item.billiardsmod.pool_cue": "Taco de sinuca",
+  "block.billiardsmod.billiards_block": "Mesa de sinuca",
+  "itemgroup.billiardsmod.billiards_items": "Itens de sinuca",
+  "screen.billiardsmod.power": "FORÇA",
+  "screen.billiardsmod.your_turn": "Sua vez",
+  "screen.billiardsmod.player_turn": "Vez de %s",
+  "screen.billiardsmod.balls_moving": "Bolas em movimento...",
+  "screen.billiardsmod.no_players": "Nenhum jogador ativo",
+  "screen.billiardsmod.players": "Jogadores: %s",
+  "screen.billiardsmod.players_and_cue": "Jogadores: %s | Taco: %s",
+  "screen.billiardsmod.insert_cue": "Coloque um taco no slot",
+  "screen.billiardsmod.scoreboard": "PLACAR",
+  "screen.billiardsmod.point_rule": "1 ponto por bola",
+  "screen.billiardsmod.cue_ball_foul": "Falta: bola branca",
+  "screen.billiardsmod.no_ball_hit_foul": "Falta: nenhuma bola",
+  "screen.billiardsmod.scroll_scores": "Role para ver mais"
+}

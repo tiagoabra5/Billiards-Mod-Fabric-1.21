@@ -3,5 +3,18 @@
 
   "block.billiardsmod.billiards_block": "Billiards Table",
 
-  "itemgroup.billiardsmod.billiards_items": "Billiards Items"
+  "itemgroup.billiardsmod.billiards_items": "Billiards Items",
+  "screen.billiardsmod.power": "POWER",
+  "screen.billiardsmod.your_turn": "Your turn",
+  "screen.billiardsmod.player_turn": "%s's turn",
+  "screen.billiardsmod.balls_moving": "Balls in motion...",
+  "screen.billiardsmod.no_players": "No active players",
+  "screen.billiardsmod.players": "Players: %s",
+  "screen.billiardsmod.players_and_cue": "Players: %s | Cue: %s",
+  "screen.billiardsmod.insert_cue": "Place a cue in the slot",
+  "screen.billiardsmod.scoreboard": "SCORES",
+  "screen.billiardsmod.point_rule": "1 point per ball",
+  "screen.billiardsmod.cue_ball_foul": "Foul: cue ball",
+  "screen.billiardsmod.no_ball_hit_foul": "Foul: no ball hit",
+  "screen.billiardsmod.scroll_scores": "Scroll to see more"
 }

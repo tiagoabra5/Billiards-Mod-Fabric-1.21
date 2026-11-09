@@ -3,9 +3,11 @@ package com.tiago.billiardsmod.block.entity.custom;
 import com.tiago.billiardsmod.block.entity.ImplementedInventory;
 import com.tiago.billiardsmod.block.entity.ModBlockEntities;
 import com.tiago.billiardsmod.billiards.Ball;
-import com.tiago.billiardsmod.billiards.BallRack;
-import com.tiago.billiardsmod.billiards.BilliardsPhysics;
-import com.tiago.billiardsmod.billiards.TableBounds;
+import com.tiago.billiardsmod.billiards.BilliardsGame;
+import com.tiago.billiardsmod.billiards.PlayerScore;
+import com.tiago.billiardsmod.billiards.FoulReason;
+import com.tiago.billiardsmod.item.PoolCueItem;
+import com.tiago.billiardsmod.network.BilliardsState;
 import com.tiago.billiardsmod.screen.custom.BilliardsScreenHandler;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
@@ -22,81 +24,100 @@ import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-public class BilliardsBlockEntity extends BlockEntity implements ImplementedInventory, ExtendedScreenHandlerFactory<BlockPos> {
+public class BilliardsBlockEntity extends BlockEntity implements ImplementedInventory, ExtendedScreenHandlerFactory<BilliardsScreenHandler.OpeningData> {
 
     private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(1, ItemStack.EMPTY);
 
-    public static final float TABLE_WIDTH = 130f;
-    public static final float TABLE_HEIGHT = 160f;
-    public static final float BALL_RADIUS = 4f;
-    public static final float POCKET_CAPTURE_RADIUS = 9f;
-    private static final int RACK_ROWS = 5;
-
-    private List<Ball> balls;
+    private final BilliardsGame game = new BilliardsGame();
 
     public BilliardsBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.BILLIARDS_BE, pos, state);
-        this.balls = createInitialRack();
-    }
-
-    private List<Ball> createInitialRack() {
-        float spacing = BALL_RADIUS * 2f + 0.5f;
-        float triangleHeight = (RACK_ROWS - 1) * spacing * 0.87f;
-        float footSpotY = BALL_RADIUS + 4 + triangleHeight;
-        float headSpotY = TABLE_HEIGHT - 20;
-
-        return BallRack.createStandardRack(
-                TABLE_WIDTH / 2f,
-                footSpotY,
-                headSpotY,
-                BALL_RADIUS
-        );
-    }
-
-    private TableBounds getLogicalBounds() {
-        return new TableBounds(0f, 0f, TABLE_WIDTH, TABLE_HEIGHT);
-    }
-
-    private List<float[]> getLogicalPocketPositions() {
-        float midY = TABLE_HEIGHT / 2f;
-        return List.of(
-                new float[]{0f, 0f},
-                new float[]{0f, midY},
-                new float[]{0f, TABLE_HEIGHT},
-                new float[]{TABLE_WIDTH, 0f},
-                new float[]{TABLE_WIDTH, midY},
-                new float[]{TABLE_WIDTH, TABLE_HEIGHT}
-        );
     }
 
     public List<Ball> getBalls() {
-        return balls;
+        return game.getBalls();
     }
 
-    public void tick(World world, BlockPos pos, BlockState state) {
-        if (world.isClient) return;
+    public long getGameRevision() {
+        return game.getRevision();
+    }
 
-        boolean wasMoving = BilliardsPhysics.areBallsMoving(balls);
+    public ItemStack takeLegacyCue() {
+        ItemStack cue = removeStack(0);
+        if (!cue.isEmpty()) markDirty();
+        return cue;
+    }
 
-        BilliardsPhysics.update(balls, getLogicalBounds(), getLogicalPocketPositions(), POCKET_CAPTURE_RADIUS);
-
-        boolean isMoving = BilliardsPhysics.areBallsMoving(balls);
-
-        if (wasMoving || isMoving) {
+    public void joinPlayer(PlayerEntity player) {
+        if (!player.isSpectator()) {
+            game.joinPlayer(player.getUuid(), player.getGameProfile().getName());
             markDirty();
-            if (world instanceof net.minecraft.server.world.ServerWorld serverWorld) {
-                serverWorld.getChunkManager().markForUpdate(pos);
+        }
+    }
+
+    public void leavePlayer(PlayerEntity player) {
+        game.leavePlayer(player.getUuid());
+        // The final departure resets the rack even if the table was already stationary.
+        markDirty();
+    }
+
+    public BilliardsState createState() {
+        UUID currentPlayer = game.getCurrentPlayer();
+        ServerPlayerEntity active = world instanceof ServerWorld serverWorld && currentPlayer != null
+                ? serverWorld.getServer().getPlayerManager().getPlayer(currentPlayer) : null;
+        String name = active == null ? "" : active.getGameProfile().getName();
+        return new BilliardsState(game.getBalls(), currentPlayer, name, game.getPlayerCount(),
+                game.isBusy(), game.getTurnId(), game.getScores(), game.getLastFoulPlayer(), game.getLastFoulReason());
+    }
+
+    public boolean handleShoot(ServerPlayerEntity player, long turnId, float angle, float power) {
+        if (world == null || world.isClient || player.isSpectator() || !canPlayerUse(player)
+                || !(player.currentScreenHandler instanceof BilliardsScreenHandler handler)
+                || !handler.isTable(this) || !handler.canUse(player)) {
+            return false;
+        }
+        int usesBefore = handler.getRemainingCueUses();
+        if (!handler.tryShoot(game, player, turnId, angle, power)) return false;
+        if (usesBefore == 1) {
+            world.playSound(null, pos, SoundEvents.ENTITY_ITEM_BREAK, SoundCategory.BLOCKS, 1f, 1f);
+        }
+        markDirty();
+        return true;
+    }
+
+    public static void tick(World world, BlockPos pos, BlockState state, BilliardsBlockEntity blockEntity) {
+        if (!(world instanceof ServerWorld serverWorld)) return;
+        for (UUID playerId : blockEntity.game.getPlayers()) {
+            ServerPlayerEntity player = serverWorld.getServer().getPlayerManager().getPlayer(playerId);
+            if (player == null || !player.isAlive() || player.isSpectator()
+                    || !(player.currentScreenHandler instanceof BilliardsScreenHandler handler)
+                    || !handler.isTable(blockEntity) || !blockEntity.canPlayerUse(player)) {
+                blockEntity.game.leavePlayer(playerId);
+                blockEntity.markDirty();
             }
         }
+        if (blockEntity.game.tick()) blockEntity.markDirty();
+    }
+
+    @Override
+    public boolean canPlayerUse(PlayerEntity player) {
+        return world != null && !isRemoved() && player.getWorld() == world
+                && world.getBlockEntity(pos) == this
+                && player.squaredDistanceTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
     }
 
     @Override
@@ -105,10 +126,42 @@ public class BilliardsBlockEntity extends BlockEntity implements ImplementedInve
     }
 
     @Override
+    public int getMaxCountPerStack() {
+        return 1;
+    }
+
+    @Override
+    public boolean isValid(int slot, ItemStack stack) {
+        return slot == 0 && PoolCueItem.isUsable(stack);
+    }
+
+    @Override
+    public boolean canInsert(int slot, ItemStack stack, @Nullable Direction side) {
+        // Insertion is manual through the slot in the opened screen.
+        return false;
+    }
+
+    @Override
     protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         super.writeNbt(nbt, registryLookup);
         Inventories.writeNbt(nbt, inventory, registryLookup);
         nbt.put("Balls", writeBallsNbt());
+        BilliardsGame.Progress progress = game.saveProgress();
+        NbtList scoreList = new NbtList();
+        for (PlayerScore score : progress.scores()) {
+            NbtCompound entry = new NbtCompound();
+            entry.putUuid("Player", score.playerId());
+            entry.putString("Name", score.playerName());
+            entry.putInt("Points", score.points());
+            scoreList.add(entry);
+        }
+        nbt.put("Scores", scoreList);
+        if (progress.shotPlayer() != null) nbt.putUuid("ShotPlayer", progress.shotPlayer());
+        nbt.putInt("ShotPoints", progress.shotPoints());
+        nbt.putBoolean("CueBallFoul", progress.cueBallFoul());
+        nbt.putBoolean("HitObjectBall", progress.hitObjectBall());
+        if (progress.lastFoulPlayer() != null) nbt.putUuid("LastFoulPlayer", progress.lastFoulPlayer());
+        nbt.putString("LastFoulReason", progress.lastFoulReason().name());
     }
 
     @Override
@@ -118,11 +171,27 @@ public class BilliardsBlockEntity extends BlockEntity implements ImplementedInve
         if (nbt.contains("Balls")) {
             readBallsNbt(nbt.getList("Balls", 10)); // 10 = NbtCompound type
         }
+        List<PlayerScore> scores = new ArrayList<>();
+        NbtList scoreList = nbt.getList("Scores", 10);
+        for (int i = 0; i < scoreList.size(); i++) {
+            NbtCompound entry = scoreList.getCompound(i);
+            if (entry.containsUuid("Player")) {
+                scores.add(new PlayerScore(entry.getUuid("Player"), entry.getString("Name"), entry.getInt("Points")));
+            }
+        }
+        UUID lastFoulPlayer = nbt.containsUuid("LastFoulPlayer") ? nbt.getUuid("LastFoulPlayer") : null;
+        FoulReason reason = nbt.contains("LastFoulReason")
+                ? FoulReason.fromName(nbt.getString("LastFoulReason"))
+                : lastFoulPlayer == null ? FoulReason.NONE : FoulReason.CUE_BALL;
+        game.loadProgress(new BilliardsGame.Progress(scores,
+                nbt.containsUuid("ShotPlayer") ? nbt.getUuid("ShotPlayer") : null,
+                nbt.getInt("ShotPoints"), nbt.getBoolean("CueBallFoul"), nbt.getBoolean("HitObjectBall"),
+                lastFoulPlayer, reason));
     }
 
     private NbtList writeBallsNbt() {
         NbtList list = new NbtList();
-        for (Ball ball : balls) {
+        for (Ball ball : game.getBalls()) {
             NbtCompound ballNbt = new NbtCompound();
             ballNbt.putInt("Number", ball.number);
             ballNbt.putFloat("X", ball.x);
@@ -152,23 +221,23 @@ public class BilliardsBlockEntity extends BlockEntity implements ImplementedInve
             loaded.add(ball);
         }
         if (!loaded.isEmpty()) {
-            this.balls = loaded;
+            game.loadBalls(loaded);
         }
     }
 
     @Override
-    public BlockPos getScreenOpeningData(ServerPlayerEntity serverPlayerEntity) {
-        return this.pos;
+    public BilliardsScreenHandler.OpeningData getScreenOpeningData(ServerPlayerEntity serverPlayerEntity) {
+        return new BilliardsScreenHandler.OpeningData(pos, createState());
     }
 
     @Override
     public Text getDisplayName() {
-        return Text.literal("Billiards");
+        return Text.translatable("block.billiardsmod.billiards_block");
     }
 
     @Override
     public @Nullable ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
-        return new BilliardsScreenHandler(syncId, playerInventory, this.pos);
+        return new BilliardsScreenHandler(syncId, playerInventory, this);
     }
 
     @Override
